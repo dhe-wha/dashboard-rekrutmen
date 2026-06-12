@@ -534,7 +534,7 @@
     function parseRows(json) {
       const rows = json.table.rows;
       if (!rows || rows.length === 0) return null;
-      const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+      // Tidak ada filter tanggal di sini — semua data dimuat penuh
       return rows.map((row, i) => {
         const c = row.c;
         const get = (idx) => (c[idx] && c[idx].v != null) ? String(c[idx].v) : "";
@@ -546,9 +546,7 @@
           tgl:     label, dateObj,
           color:   AVATAR_COLORS[i % AVATAR_COLORS.length],
         };
-      })
-      .filter(c => c.name)
-      .filter(c => !c.dateObj || c.dateObj >= cutoff); // 30 hari terakhir
+      }).filter(c => c.name);
     }
 
     function showSuccess(n) {
@@ -638,6 +636,11 @@
   const scoreColor = s => s >= 80 ? "#10B981" : s >= 65 ? "#F59E0B" : "#EF4444";
 
   function renderTable(data) {
+    // Filter 30 hari terakhir — hanya untuk tabel kandidat terbaru
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+    data = data.filter(c => !c.dateObj || c.dateObj >= cutoff);
+    const countEl = document.getElementById("count-kandidat");
+    if (countEl) countEl.textContent = `${data.length} kandidat (30 hari terakhir)`;
     const tbody = document.getElementById("tableBody");
     tbody.innerHTML = data.map(c => {
       const st = statusMap[c.status];
