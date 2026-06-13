@@ -1616,6 +1616,7 @@
 
     document.querySelector(".content").classList.add("hidden");
     document.getElementById("detail-view").classList.add("active");
+    window.scrollTo({ top: 0, behavior: "instant" });
   }
 
   function hideDetail() {
