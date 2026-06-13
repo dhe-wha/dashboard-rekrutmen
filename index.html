@@ -788,7 +788,7 @@
           pengalaman:  r.pengalaman || "",
           foto:             r.foto || "",
           status_kandidat:  r.status_kandidat || "",
-          tgl:         label, dateObj,
+          tgl:         r.tanggal || "-", dateObj,
           color:       AVATAR_COLORS[i % AVATAR_COLORS.length],
         };
       }).filter(c => c.name);
