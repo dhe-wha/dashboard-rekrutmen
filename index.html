@@ -459,7 +459,7 @@
 
     <!-- STATUS BAR -->
     <div style="margin-bottom:16px;padding:10px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;font-size:12px;color:#15803D;font-weight:500" id="data-status">
-      ⏳ Memuat data dari Supabase...
+      ⏳ Memuat data dari Google Sheets...
     </div>
 
     <!-- STATS -->
@@ -471,7 +471,7 @@
         </div>
         <div class="stat-value" id="stat-total">—</div>
         <div class="stat-footer">
-          <span class="stat-period">dari Supabase</span>
+          <span class="stat-period">dari Google Sheets</span>
         </div>
       </div>
       <div class="stat-card">
@@ -628,28 +628,30 @@
     loadEl.classList.add("show");
 
     try {
-      const res = await fetch(
-        `${SUPA_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(password)}&limit=1`,
-        { headers: supaHeaders }
-      );
-      const data = await res.json();
+      const res  = await fetch(GVIZ("users"));
+      const text = await res.text();
+      const rows = parseCSV(text);
       loadEl.classList.remove("show");
 
-      if (data && data.length > 0) {
-        const match = data[0];
+      const match = rows.find(r =>
+        (r.email || "").trim().toLowerCase() === email &&
+        String(r.password || "").trim() === String(password).trim()
+      );
+
+      if (match) {
         currentUser = { email: match.email, nama: match.nama_user, role: match.role };
         document.getElementById("login-page").classList.add("hidden");
         const initials = match.nama_user.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
         document.getElementById("user-avatar").textContent = initials;
         document.getElementById("user-name").textContent   = match.nama_user;
-        loadFromSupabase();
+        loadFromSheets();
       } else {
         errEl.textContent = "Email atau password salah.";
         errEl.classList.add("show");
       }
     } catch(e) {
       loadEl.classList.remove("show");
-      errEl.textContent = "Gagal terhubung ke server. Cek koneksi internet.";
+      errEl.textContent = "Gagal memuat data. Cek koneksi internet.";
       errEl.classList.add("show");
     }
   }
@@ -663,10 +665,34 @@
     document.getElementById("user-avatar").textContent = "?";
   }
 
-  // ── KONFIGURASI SUPABASE ───────────────────────────────────
-  const SUPA_URL = "https://fergturaafsmuqjuamsq.supabase.co";
-  const SUPA_KEY = "sb_publishable_Nlu44F12CAowIpV8qRurew_SMSuMWap";
-  const supaHeaders = { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json" };
+  // ── KONFIGURASI GOOGLE SHEETS ──────────────────────────────
+  const SHEET_ID = "1Tj2ZNCW04lOGoB5hcCxT_d3GvqdAj854daY4dVDN3sU";
+  const GVIZ = (sheet) =>
+    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}`;
+
+  // ── CSV PARSER ─────────────────────────────────────────────
+  function parseCSVRow(row) {
+    const result = []; let cur = ""; let inQ = false;
+    for (let i = 0; i < row.length; i++) {
+      const ch = row[i];
+      if (ch === '"') { if (inQ && row[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      else if (ch === ',' && !inQ) { result.push(cur.trim()); cur = ""; }
+      else { cur += ch; }
+    }
+    result.push(cur.trim());
+    return result;
+  }
+  function parseCSV(text) {
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
+    const headers = parseCSVRow(lines[0]);
+    return lines.slice(1).filter(l => l.trim()).map(line => {
+      const vals = parseCSVRow(line);
+      const obj = {};
+      headers.forEach((h, i) => obj[h.trim()] = (vals[i] || "").replace(/^"|"$/g, ""));
+      return obj;
+    });
+  }
 
   // Warna avatar otomatis berdasarkan index
   const AVATAR_COLORS = ["#6366F1","#10B981","#F59E0B","#0EA5E9","#8B5CF6","#EF4444","#EC4899","#14B8A6"];
@@ -687,8 +713,8 @@
 
   let candidates = [];
 
-  // ── FETCH DATA DARI SUPABASE ───────────────────────────────
-  async function loadFromSupabase() {
+  // ── FETCH DATA DARI GOOGLE SHEETS ─────────────────────────
+  async function loadFromSheets() {
     const statusEl = document.getElementById("data-status");
 
     function parseTgl(val) {
@@ -699,15 +725,16 @@
     }
 
     try {
-      const res = await fetch(`${SUPA_URL}/rest/v1/kandidat?select=*&order=id.asc`, { headers: supaHeaders });
-      const data = await res.json();
+      const res  = await fetch(GVIZ("candidate"));
+      const text = await res.text();
+      const rows = parseCSV(text);
 
-      if (!Array.isArray(data) || data.length === 0) {
+      if (!rows || rows.length === 0) {
         if (statusEl) { statusEl.textContent = "⚠ Tidak ada data kandidat"; statusEl.style.background="#FFFBEB"; statusEl.style.borderColor="#FDE68A"; statusEl.style.color="#B45309"; }
         return;
       }
 
-      candidates = data.map((r, i) => {
+      candidates = rows.map((r, i) => {
         const { dateObj, label } = parseTgl(r.tanggal);
         return {
           id:          r.kode_id || "",
@@ -728,10 +755,10 @@
         };
       }).filter(c => c.name);
 
-      if (statusEl) { statusEl.textContent = `✅ Data live dari Supabase · ${candidates.length} kandidat`; statusEl.style.background="#F0FDF4"; statusEl.style.borderColor="#BBF7D0"; statusEl.style.color="#15803D"; }
+      if (statusEl) { statusEl.textContent = `✅ Data live dari Google Sheets · ${candidates.length} kandidat`; statusEl.style.background="#F0FDF4"; statusEl.style.borderColor="#BBF7D0"; statusEl.style.color="#15803D"; }
       updateStats(); renderTable(candidates); renderCharts();
     } catch(e) {
-      if (statusEl) { statusEl.textContent = "⚠ Gagal memuat data dari Supabase"; statusEl.style.background="#FEF2F2"; statusEl.style.borderColor="#FCA5A5"; statusEl.style.color="#B91C1C"; }
+      if (statusEl) { statusEl.textContent = "⚠ Gagal memuat data dari Google Sheets"; statusEl.style.background="#FEF2F2"; statusEl.style.borderColor="#FCA5A5"; statusEl.style.color="#B91C1C"; }
       console.error(e);
     }
   }
@@ -868,7 +895,7 @@
   }
 
   // ── INISIALISASI ───────────────────────────────────────────
-  // loadFromSheets() dipanggil setelah login berhasil
+  // loadFromSheets() dipanggil setelah login berhasil (via doLogin)
 
   // Tab interaktif
   document.querySelectorAll(".tab").forEach(t => {
