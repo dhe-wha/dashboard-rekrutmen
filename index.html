@@ -717,7 +717,14 @@
     function parseTgl(val) {
       if (!val || String(val).trim() === "") return { dateObj: null, label: "-" };
       const str = String(val).trim();
-      // Format DD/MM/YYYY atau DD-MM-YYYY (format Indonesia)
+      // Format D-Mon-YY atau D-Mon-YYYY (misal: "5-Nov-22", "1-Nov-2022")
+      const monMatch = str.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/);
+      if (monMatch) {
+        const year = monMatch[3].length === 2 ? 2000 + parseInt(monMatch[3]) : parseInt(monMatch[3]);
+        const d = new Date(`${monMatch[1]} ${monMatch[2]} ${year}`);
+        if (!isNaN(d)) return { dateObj: d, label: d.toLocaleDateString("id-ID", { day:"2-digit", month:"short", year:"numeric" }) };
+      }
+      // Format DD/MM/YYYY atau DD-MM-YYYY
       const dmy = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
       if (dmy) {
         const d = new Date(+dmy[3], +dmy[2]-1, +dmy[1]);
