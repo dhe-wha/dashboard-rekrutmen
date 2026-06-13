@@ -983,11 +983,11 @@
     'Candidate':     { color:'#64748B', bg:'#F1F5F9', label:'Kandidat',       icon:'👤', order:1 },
     'Invited':       { color:'#0EA5E9', bg:'#E0F2FE', label:'Diundang',       icon:'📩', order:2 },
     'Tested':        { color:'#F59E0B', bg:'#FEF3C7', label:'Test',           icon:'📝', order:3 },
-    'Passed':        { color:'#8B5CF6', bg:'#EDE9FE', label:'Lulus Test',     icon:'⭐', order:4 },
-    'User Interview':{ color:'#4F46E5', bg:'#EEF2FF', label:'User Interview', icon:'🗣️', order:5 },
+    'User Interview':{ color:'#4F46E5', bg:'#EEF2FF', label:'User Interview', icon:'🗣️', order:4 },
+    'Passed':        { color:'#8B5CF6', bg:'#EDE9FE', label:'Lulus Test',     icon:'⭐', order:5 },
     'Hired':         { color:'#10B981', bg:'#D1FAE5', label:'Hired',          icon:'🎉', order:6 },
   };
-  const PHASE_ORDER = ['Candidate','Invited','Tested','Passed','User Interview','Hired'];
+  const PHASE_ORDER = ['Candidate','Invited','Tested','User Interview','Passed','Hired'];
 
   async function loadPhases() {
     try {
@@ -1147,6 +1147,7 @@
     phaseSearchQ = q;
     renderInterviewPage();
   }
+  window.phaseSearch = phaseSearch;
 
   function filterJobs(q) {
     const ptFilter = (document.getElementById("jobs-filter-pt")||{}).value || "";
