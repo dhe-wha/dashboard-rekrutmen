@@ -994,17 +994,25 @@
       const res  = await fetch(GVIZ("phase"));
       const text = await res.text();
       const rows = parseCSV(text);
-      phases = rows.filter(r => r.nama_kandidat).map(r => ({
-        nomor:      r.nomor_permintaan || "",
-        berkas:     r.nomor_berkas     || "",
-        nama:       r.nama_kandidat    || "",
-        tgl_undang: r.tgl_diundang     || "",
-        tgl_test:   r.tgl_test         || "",
-        tgl_interview: r.tgl_interview || "",
-        tgl_gabung: r.tgl_gabung       || "",
-        phase:      (r.Phase || r.phase || "Candidate").trim(),
-        ket:        r.Keterangan       || "",
-      }));
+      // Build lookup map: kode_id → tanggal daftar dari sheet candidate
+      const candMap = {};
+      candidates.forEach(c => { if (c.id) candMap[c.id] = c.tgl; });
+
+      phases = rows.filter(r => r.nama_kandidat).map(r => {
+        const berkas = r.nomor_berkas || "";
+        return {
+          nomor:        r.nomor_permintaan || "",
+          berkas,
+          nama:         r.nama_kandidat    || "",
+          tgl_daftar:   candMap[berkas]    || "",   // dari sheet candidate
+          tgl_undang:   r.tgl_diundang     || "",
+          tgl_test:     r.tgl_test         || "",
+          tgl_interview:r.tgl_interview    || "",
+          tgl_gabung:   r.tgl_gabung       || "",
+          phase:        (r.Phase || r.phase || "Candidate").trim(),
+          ket:          r.Keterangan       || "",
+        };
+      });
       const badgeEl = document.getElementById("badge-interview");
       if (badgeEl) badgeEl.textContent = phases.length;
       renderInterviewPage();
@@ -1134,7 +1142,8 @@
                 const ini = initials(c.nama);
                 const col = cardColor(c.nama);
                 const dates = [];
-                if (c.tgl_undang)    dates.push(`📩 Diterima: ${c.tgl_undang}`);
+                if (c.tgl_daftar)    dates.push(`📅 Daftar: ${c.tgl_daftar}`);
+                if (c.tgl_undang)    dates.push(`📩 Diundang: ${c.tgl_undang}`);
                 if (c.tgl_test)      dates.push(`📝 Test: ${c.tgl_test}`);
                 if (c.tgl_interview) dates.push(`🗣 Interview: ${c.tgl_interview}`);
                 if (c.tgl_gabung)    dates.push(`🎉 Gabung: ${c.tgl_gabung}`);
