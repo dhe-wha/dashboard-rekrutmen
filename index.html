@@ -772,9 +772,10 @@
       }
 
       candidates = rows.map((r, i) => {
-        const { dateObj, label } = parseTgl(r.tanggal);
+        const tglRaw = r.tanggal_berkas_diterima || r['tanggal_berkas diterima'] || r.tanggal || "";
+        const { dateObj, label } = parseTgl(tglRaw);
         return {
-          id:          r.kode_id || "",
+          id:          r.nomor_berkas || r.kode_id || "",
           name:        r.nama || "",
           email:       r.email || "",
           posisi:      r.posisi || "-",
@@ -788,7 +789,7 @@
           pengalaman:  r.pengalaman || "",
           foto:             r.foto || "",
           status_kandidat:  r.status_kandidat || "",
-          tgl:         r.tanggal || "-", dateObj,
+          tgl:         tglRaw || "-", dateObj,
           color:       AVATAR_COLORS[i % AVATAR_COLORS.length],
         };
       }).filter(c => c.name);
@@ -1613,14 +1614,21 @@
         </div>
       </div>`;
 
-    document.querySelector(".content").classList.add("hidden");
+    document.querySelectorAll(".content").forEach(el => el.classList.add("hidden"));
     document.getElementById("detail-view").classList.add("active");
     window.scrollTo({ top: 0, behavior: "instant" });
   }
 
   function hideDetail() {
-    document.querySelector(".content").classList.remove("hidden");
     document.getElementById("detail-view").classList.remove("active");
+    document.querySelectorAll(".content").forEach(el => el.classList.remove("hidden"));
+    // kembalikan tampilan page yang sedang aktif
+    const activeNav = document.querySelector(".nav-item.active[data-page]");
+    const activePage = activeNav ? activeNav.dataset.page : "kandidat";
+    ["dashboard","kandidat","lowongan","interview"].forEach(p => {
+      const el = document.getElementById(`page-${p}`);
+      if (el) el.style.display = p === activePage ? "block" : "none";
+    });
   }
 </script>
 
