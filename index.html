@@ -322,9 +322,83 @@
       .charts-row { grid-template-columns: 1fr; }
       .pipeline-row { grid-template-columns: repeat(3, 1fr); }
     }
+
+    /* LOGIN PAGE */
+    .login-page {
+      position: fixed; inset: 0; z-index: 999;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .login-page.hidden { display: none; }
+    .login-card {
+      background: var(--white); border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 40px; width: 100%; max-width: 400px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+    }
+    .login-brand { text-align: center; margin-bottom: 28px; }
+    .login-brand h2 { font-size: 24px; font-weight: 800; color: var(--dark); }
+    .login-brand h2 span { color: var(--primary); }
+    .login-brand p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .login-field { margin-bottom: 16px; }
+    .login-field label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: var(--muted); margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .login-field input {
+      width: 100%; padding: 10px 14px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: 14px; color: var(--dark); outline: none;
+      transition: border-color 0.15s;
+    }
+    .login-field input:focus { border-color: var(--primary); }
+    .login-btn {
+      width: 100%; padding: 11px;
+      background: var(--primary); color: #fff;
+      border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 700;
+      cursor: pointer; margin-top: 8px;
+      transition: background 0.15s;
+    }
+    .login-btn:hover { background: #4338CA; }
+    .login-error {
+      display: none; margin-top: 12px;
+      padding: 10px 14px; border-radius: 8px;
+      background: #FEF2F2; border: 1px solid #FECACA;
+      color: var(--danger); font-size: 13px; text-align: center;
+    }
+    .login-error.show { display: block; }
+    .login-loading {
+      display: none; margin-top: 12px;
+      text-align: center; font-size: 13px; color: var(--muted);
+    }
+    .login-loading.show { display: block; }
   </style>
 </head>
 <body>
+
+<!-- LOGIN PAGE -->
+<div class="login-page" id="login-page">
+  <div class="login-card">
+    <div class="login-brand">
+      <h2>Recruit<span>Hub</span></h2>
+      <p>Sistem Rekrutmen — Masuk untuk melanjutkan</p>
+    </div>
+    <div class="login-field">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="nama@perusahaan.com" autocomplete="email"/>
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter') doLogin()"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Masuk</button>
+    <div class="login-loading" id="login-loading">⏳ Memverifikasi...</div>
+    <div class="login-error" id="login-error">Email atau password salah.</div>
+  </div>
+</div>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -373,7 +447,11 @@
     <div class="topbar-right">
       <button class="btn btn-outline">⬇ Export</button>
       <button class="btn btn-primary">＋ Tambah Kandidat</button>
-      <div class="avatar">DW</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="avatar" id="user-avatar">?</div>
+        <span style="font-size:13px;font-weight:600;color:var(--dark)" id="user-name"></span>
+        <button class="btn btn-outline" style="font-size:12px;padding:6px 12px" onclick="doLogout()">Keluar</button>
+      </div>
     </div>
   </header>
 
@@ -381,7 +459,7 @@
 
     <!-- STATUS BAR -->
     <div style="margin-bottom:16px;padding:10px 14px;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;font-size:12px;color:#15803D;font-weight:500" id="data-status">
-      ⏳ Memuat data dari Google Sheets...
+      ⏳ Memuat data dari Supabase...
     </div>
 
     <!-- STATS -->
@@ -393,37 +471,37 @@
         </div>
         <div class="stat-value" id="stat-total">—</div>
         <div class="stat-footer">
-          <span class="stat-period">dari Google Sheets</span>
+          <span class="stat-period">dari Supabase</span>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-label">Dalam Proses</span>
+          <span class="stat-label">Status Open</span>
           <div class="stat-icon yellow">⏳</div>
         </div>
         <div class="stat-value" id="stat-proses">—</div>
         <div class="stat-footer">
-          <span class="stat-period">screening s/d penawaran</span>
+          <span class="stat-period">kandidat aktif</span>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-label">Diterima (Hired)</span>
+          <span class="stat-label">Status Close</span>
           <div class="stat-icon green">✅</div>
         </div>
         <div class="stat-value" id="stat-hired">—</div>
         <div class="stat-footer">
-          <span class="stat-period">status hired</span>
+          <span class="stat-period">kandidat selesai</span>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-header">
-          <span class="stat-label">Ditolak</span>
+          <span class="stat-label">Sarjana (S1)</span>
           <div class="stat-icon red">❌</div>
         </div>
         <div class="stat-value" id="stat-rejected">—</div>
         <div class="stat-footer">
-          <span class="stat-period">status rejected</span>
+          <span class="stat-period">lulusan sarjana</span>
         </div>
       </div>
     </div>
@@ -439,25 +517,25 @@
       <div class="pipeline-card">
         <div class="pipeline-dot" style="background:#0EA5E9"></div>
         <div class="pipeline-num" id="pipe-screening">—</div>
-        <div class="pipeline-label">Screening</div>
+        <div class="pipeline-label pipe-label">Dept #1</div>
         <div class="pipeline-bar"><div class="pipeline-fill" id="fill-screening" style="width:0%;background:#0EA5E9"></div></div>
       </div>
       <div class="pipeline-card">
         <div class="pipeline-dot" style="background:#F59E0B"></div>
         <div class="pipeline-num" id="pipe-interview">—</div>
-        <div class="pipeline-label">Interview</div>
+        <div class="pipeline-label pipe-label">Dept #2</div>
         <div class="pipeline-bar"><div class="pipeline-fill" id="fill-interview" style="width:0%;background:#F59E0B"></div></div>
       </div>
       <div class="pipeline-card">
         <div class="pipeline-dot" style="background:#10B981"></div>
         <div class="pipeline-num" id="pipe-test">—</div>
-        <div class="pipeline-label">Tes Skill</div>
+        <div class="pipeline-label pipe-label">Dept #3</div>
         <div class="pipeline-bar"><div class="pipeline-fill" id="fill-test" style="width:0%;background:#10B981"></div></div>
       </div>
       <div class="pipeline-card">
         <div class="pipeline-dot" style="background:#8B5CF6"></div>
         <div class="pipeline-num" id="pipe-offer">—</div>
-        <div class="pipeline-label">Penawaran</div>
+        <div class="pipeline-label pipe-label">Dept #4</div>
         <div class="pipeline-bar"><div class="pipeline-fill" id="fill-offer" style="width:0%;background:#8B5CF6"></div></div>
       </div>
     </div>
@@ -467,8 +545,8 @@
       <div class="card">
         <div class="card-header">
           <div>
-            <div class="card-title">Pelamar per Bulan</div>
-            <div class="card-subtitle">Tren 6 bulan terakhir</div>
+            <div class="card-title">Kandidat per Departemen</div>
+            <div class="card-subtitle">Top 6 departemen</div>
           </div>
           <div class="filter-tabs">
             <button class="tab active">6B</button>
@@ -511,9 +589,9 @@
             <th>Posisi</th>
             <th>Departemen</th>
             <th>Status</th>
-            <th>Sumber</th>
-            <th>Skor</th>
-            <th>Tgl Lamar</th>
+            <th>Pendidikan</th>
+            <th>Kabupaten</th>
+            <th>Tgl Daftar</th>
             <th></th>
           </tr>
         </thead>
@@ -535,9 +613,60 @@
 </div>
 
 <script>
-  // ── KONFIGURASI GOOGLE SHEETS ──────────────────────────────
-  const SHEET_ID = "1CR2_gDaPXvcN1oXJNAVvdU-bL5v0UQ0Qdr6eVDYsj08";
-  const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+  // ── LOGIN ──────────────────────────────────────────────────
+  let currentUser = null;
+
+  async function doLogin() {
+    const email    = document.getElementById("login-email").value.trim().toLowerCase();
+    const password = document.getElementById("login-password").value;
+    const errEl    = document.getElementById("login-error");
+    const loadEl   = document.getElementById("login-loading");
+
+    errEl.classList.remove("show");
+    if (!email || !password) { errEl.textContent = "Email dan password wajib diisi."; errEl.classList.add("show"); return; }
+
+    loadEl.classList.add("show");
+
+    try {
+      const res = await fetch(
+        `${SUPA_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&password=eq.${encodeURIComponent(password)}&limit=1`,
+        { headers: supaHeaders }
+      );
+      const data = await res.json();
+      loadEl.classList.remove("show");
+
+      if (data && data.length > 0) {
+        const match = data[0];
+        currentUser = { email: match.email, nama: match.nama_user, role: match.role };
+        document.getElementById("login-page").classList.add("hidden");
+        const initials = match.nama_user.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+        document.getElementById("user-avatar").textContent = initials;
+        document.getElementById("user-name").textContent   = match.nama_user;
+        loadFromSupabase();
+      } else {
+        errEl.textContent = "Email atau password salah.";
+        errEl.classList.add("show");
+      }
+    } catch(e) {
+      loadEl.classList.remove("show");
+      errEl.textContent = "Gagal terhubung ke server. Cek koneksi internet.";
+      errEl.classList.add("show");
+    }
+  }
+
+  function doLogout() {
+    currentUser = null;
+    document.getElementById("login-page").classList.remove("hidden");
+    document.getElementById("login-email").value    = "";
+    document.getElementById("login-password").value = "";
+    document.getElementById("user-name").textContent = "";
+    document.getElementById("user-avatar").textContent = "?";
+  }
+
+  // ── KONFIGURASI SUPABASE ───────────────────────────────────
+  const SUPA_URL = "https://fergturaafsmuqjuamsq.supabase.co";
+  const SUPA_KEY = "sb_publishable_Nlu44F12CAowIpV8qRurew_SMSuMWap";
+  const supaHeaders = { "apikey": SUPA_KEY, "Authorization": `Bearer ${SUPA_KEY}`, "Content-Type": "application/json" };
 
   // Warna avatar otomatis berdasarkan index
   const AVATAR_COLORS = ["#6366F1","#10B981","#F59E0B","#0EA5E9","#8B5CF6","#EF4444","#EC4899","#14B8A6"];
@@ -558,152 +687,93 @@
 
   let candidates = [];
 
-  // ── FETCH DATA DARI GOOGLE SHEETS ─────────────────────────
-  async function loadFromSheets() {
+  // ── FETCH DATA DARI SUPABASE ───────────────────────────────
+  async function loadFromSupabase() {
     const statusEl = document.getElementById("data-status");
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&t=${Date.now()}`;
 
-    function parseGvizDate(val) {
+    function parseTgl(val) {
       if (!val) return { dateObj: null, label: "-" };
-      // Format gviz: "Date(2026,5,10)" — bulan 0-indexed
-      const m = String(val).match(/Date\((\d+),(\d+),(\d+)\)/);
-      if (m) {
-        const d = new Date(+m[1], +m[2], +m[3]);
-        const label = d.toLocaleDateString("id-ID", { day:"2-digit", month:"short", year:"numeric" });
-        return { dateObj: d, label };
-      }
-      // Format string biasa (YYYY-MM-DD atau lainnya)
       const d = new Date(val);
-      if (!isNaN(d)) {
-        return { dateObj: d, label: d.toLocaleDateString("id-ID", { day:"2-digit", month:"short", year:"numeric" }) };
-      }
+      if (!isNaN(d)) return { dateObj: d, label: d.toLocaleDateString("id-ID", { day:"2-digit", month:"short", year:"numeric" }) };
       return { dateObj: null, label: String(val) };
     }
 
-    function parseRows(json) {
-      const rows = json.table.rows;
-      if (!rows || rows.length === 0) return null;
+    try {
+      const res = await fetch(`${SUPA_URL}/rest/v1/kandidat?select=*&order=id.asc`, { headers: supaHeaders });
+      const data = await res.json();
 
-      // Baca header dari cols — bisa tambah/geser kolom di sheet tanpa ubah HTML
-      const cols = json.table.cols;
-      const colMap = {};
-      cols.forEach((col, i) => {
-        const key = (col.label || "").trim().toLowerCase();
-        colMap[key] = i;
-      });
+      if (!Array.isArray(data) || data.length === 0) {
+        if (statusEl) { statusEl.textContent = "⚠ Tidak ada data kandidat"; statusEl.style.background="#FFFBEB"; statusEl.style.borderColor="#FDE68A"; statusEl.style.color="#B45309"; }
+        return;
+      }
 
-      const col = (row, name) => {
-        const idx = colMap[name.toLowerCase()];
-        if (idx === undefined) return "";
-        const cell = row.c[idx];
-        return (cell && cell.v != null) ? cell.v : "";
-      };
-
-      return rows.map((row, i) => {
-        const tglRaw = col(row, "tanggal");
-        const { dateObj, label } = parseGvizDate(tglRaw);
-        const statusRaw = String(col(row, "status") || "").toLowerCase().trim();
+      candidates = data.map((r, i) => {
+        const { dateObj, label } = parseTgl(r.tanggal);
         return {
-          id:      String(col(row, "id") || ""),
-          name:    String(col(row, "nama") || ""),
-          email:   String(col(row, "email") || ""),
-          posisi:  String(col(row, "posisi") || ""),
-          dept:    String(col(row, "departemen") || ""),
-          status:  statusRaw,
-          sumber:  String(col(row, "sumber") || ""),
-          skor:    parseInt(col(row, "skor")) || 0,
-          tgl:     label, dateObj,
-          foto:    String(col(row, "foto") || ""),
-          color:   AVATAR_COLORS[i % AVATAR_COLORS.length],
+          id:          r.kode_id || "",
+          name:        r.nama || "",
+          email:       r.email || "",
+          posisi:      r.posisi || "-",
+          dept:        r.departemen || "-",
+          status:      String(r.status || "").toLowerCase().trim(),
+          gender:      r.gender || "",
+          pendidikan:  r.pendidikan || "",
+          jurusan:     r.jurusan || "",
+          no_telp:     r.no_telp || "",
+          kabupaten:   r.kabupaten || "",
+          pengalaman:  r.pengalaman || "",
+          foto:        r.foto || "",
+          tgl:         label, dateObj,
+          color:       AVATAR_COLORS[i % AVATAR_COLORS.length],
         };
       }).filter(c => c.name);
-    }
 
-    function showSuccess(n) {
-      if (statusEl) { statusEl.textContent = `✅ Data live dari Google Sheets · ${n} kandidat`; statusEl.style.background="#F0FDF4"; statusEl.style.borderColor="#BBF7D0"; statusEl.style.color="#15803D"; }
-    }
-    function showFallback(msg) {
-      candidates = DUMMY_DATA.map((d, i) => ({ ...d, color: AVATAR_COLORS[i % AVATAR_COLORS.length] }));
-      if (statusEl) { statusEl.textContent = msg; statusEl.style.background="#FFFBEB"; statusEl.style.borderColor="#FDE68A"; statusEl.style.color="#B45309"; }
+      if (statusEl) { statusEl.textContent = `✅ Data live dari Supabase · ${candidates.length} kandidat`; statusEl.style.background="#F0FDF4"; statusEl.style.borderColor="#BBF7D0"; statusEl.style.color="#15803D"; }
       updateStats(); renderTable(candidates); renderCharts();
-    }
-
-    try {
-      const res = await fetch(url);
-      const text = await res.text();
-      const json = JSON.parse(text.replace(/^[^\{]*/, "").replace(/\s*\);\s*$/, ""));
-      const parsed = parseRows(json);
-      if (parsed && parsed.length > 0) {
-        candidates = parsed;
-        showSuccess(candidates.length);
-        updateStats(); renderTable(candidates); renderCharts();
-      } else {
-        showFallback("⚠ Sheet kosong — menampilkan data contoh");
-      }
     } catch(e) {
-      // Fallback JSONP untuk file://
-      const cbName = "gvizCb_" + Date.now();
-      const script = document.createElement("script");
-      script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&callback=${cbName}`;
-      const timer = setTimeout(() => {
-        delete window[cbName];
-        try { document.head.removeChild(script); } catch(_) {}
-        showFallback("⚠ Buka via HTTPS (GitHub Pages) agar data sheet muncul");
-      }, 8000);
-      window[cbName] = function(json) {
-        clearTimeout(timer); delete window[cbName]; document.head.removeChild(script);
-        const parsed = parseRows(json);
-        if (parsed && parsed.length > 0) { candidates = parsed; showSuccess(candidates.length); }
-        else { candidates = DUMMY_DATA.map((d, i) => ({ ...d, color: AVATAR_COLORS[i % AVATAR_COLORS.length] })); }
-        updateStats(); renderTable(candidates); renderCharts();
-      };
-      script.onerror = () => { clearTimeout(timer); showFallback("⚠ Gagal memuat sheet"); };
-      document.head.appendChild(script);
+      if (statusEl) { statusEl.textContent = "⚠ Gagal memuat data dari Supabase"; statusEl.style.background="#FEF2F2"; statusEl.style.borderColor="#FCA5A5"; statusEl.style.color="#B91C1C"; }
+      console.error(e);
     }
   }
 
   // ── UPDATE STAT CARDS ──────────────────────────────────────
   function updateStats() {
-    const total    = candidates.length;
-    const proses   = candidates.filter(c => ["screening","interview","test","offer"].includes(c.status)).length;
-    const hired    = candidates.filter(c => c.status === "hired").length;
-    const rejected = candidates.filter(c => c.status === "rejected").length;
+    const total  = candidates.length;
+    const open   = candidates.filter(c => c.status === "open").length;
+    const closed = candidates.filter(c => c.status === "close").length;
+    const s1     = candidates.filter(c => (c.pendidikan||"").toUpperCase() === "S1").length;
     document.getElementById("stat-total").textContent    = total;
-    document.getElementById("stat-proses").textContent   = proses;
-    document.getElementById("stat-hired").textContent    = hired;
-    document.getElementById("stat-rejected").textContent = rejected;
+    document.getElementById("stat-proses").textContent   = open;
+    document.getElementById("stat-hired").textContent    = closed;
+    document.getElementById("stat-rejected").textContent = s1;
     document.getElementById("count-kandidat").textContent = total;
 
-    // Pipeline
-    const screening = candidates.filter(c => c.status === "screening").length;
-    const interview = candidates.filter(c => c.status === "interview").length;
-    const test      = candidates.filter(c => c.status === "test").length;
-    const offer     = candidates.filter(c => c.status === "offer").length;
+    // Pipeline — pakai departemen terbanyak
+    const deptCount = {};
+    candidates.forEach(c => { const d = c.dept||"Lainnya"; deptCount[d]=(deptCount[d]||0)+1; });
+    const topDept = Object.entries(deptCount).sort((a,b)=>b[1]-a[1]).slice(0,4);
     document.getElementById("pipe-total").textContent    = total;
-    document.getElementById("pipe-screening").textContent = screening;
-    document.getElementById("pipe-interview").textContent = interview;
-    document.getElementById("pipe-test").textContent     = test;
-    document.getElementById("pipe-offer").textContent    = offer;
+    document.getElementById("pipe-screening").textContent = topDept[0]?topDept[0][1]:0;
+    document.getElementById("pipe-interview").textContent = topDept[1]?topDept[1][1]:0;
+    document.getElementById("pipe-test").textContent     = topDept[2]?topDept[2][1]:0;
+    document.getElementById("pipe-offer").textContent    = topDept[3]?topDept[3][1]:0;
+    // Update label pipeline juga
+    const pipeLabels = document.querySelectorAll(".pipe-label");
+    topDept.forEach((d,i) => { if(pipeLabels[i+1]) pipeLabels[i+1].textContent = d[0]; });
     if (total > 0) {
-      document.getElementById("fill-screening").style.width = (screening/total*100) + "%";
-      document.getElementById("fill-interview").style.width = (interview/total*100) + "%";
-      document.getElementById("fill-test").style.width      = (test/total*100) + "%";
-      document.getElementById("fill-offer").style.width     = (offer/total*100) + "%";
+      document.getElementById("fill-screening").style.width = (topDept[0]?topDept[0][1]/total*100:0) + "%";
+      document.getElementById("fill-interview").style.width = (topDept[1]?topDept[1][1]/total*100:0) + "%";
+      document.getElementById("fill-test").style.width      = (topDept[2]?topDept[2][1]/total*100:0) + "%";
+      document.getElementById("fill-offer").style.width     = (topDept[3]?topDept[3][1]/total*100:0) + "%";
     }
   }
 
   let chartBulanan, chartPosisi;
 
   const statusMap = {
-    screening: { label:"Screening", cls:"badge-screening" },
-    interview:  { label:"Interview", cls:"badge-interview" },
-    test:       { label:"Tes Skill", cls:"badge-test" },
-    offer:      { label:"Penawaran", cls:"badge-offer" },
-    hired:      { label:"Diterima", cls:"badge-hired" },
-    rejected:   { label:"Ditolak",  cls:"badge-rejected" },
+    open:  { label:"Open",   cls:"badge-screening" },
+    close: { label:"Close",  cls:"badge-rejected"  },
   };
-
-  const scoreColor = s => s >= 80 ? "#10B981" : s >= 65 ? "#F59E0B" : "#EF4444";
 
   function renderTable(data) {
     // Filter 30 hari terakhir — hanya untuk tabel kandidat terbaru
@@ -713,8 +783,7 @@
     if (countEl) countEl.textContent = `${data.length} kandidat (30 hari terakhir)`;
     const tbody = document.getElementById("tableBody");
     tbody.innerHTML = data.map(c => {
-      const st = statusMap[c.status];
-      const sc = scoreColor(c.skor);
+      const st = statusMap[c.status] || { label: c.status, cls: "badge-screening" };
       const initials = c.name.split(" ").map(w=>w[0]).join("").slice(0,2);
       const avatarHtml = c.foto
         ? `<img src="${c.foto}" alt="${c.name}" class="cand-avatar" style="object-fit:cover;border:2px solid #e2e8f0">`
@@ -725,20 +794,15 @@
             ${avatarHtml}
             <div>
               <div class="cand-name">${c.name}</div>
-              <div class="cand-email">${c.email}</div>
+              <div class="cand-email">${c.no_telp || c.email || "-"}</div>
             </div>
           </div>
         </td>
         <td style="font-weight:500">${c.posisi}</td>
         <td style="color:var(--muted)">${c.dept}</td>
         <td><span class="badge ${st.cls}">${st.label}</span></td>
-        <td><span class="source-tag">${c.sumber}</span></td>
-        <td>
-          <div class="score">
-            <span style="font-size:12px;font-weight:700;color:${sc}">${c.skor}</span>
-            <div class="score-bar"><div class="score-fill" style="width:${c.skor}%;background:${sc}"></div></div>
-          </div>
-        </td>
+        <td><span class="source-tag">${c.pendidikan || "-"}</span></td>
+        <td style="color:var(--muted);font-size:12px">${c.kabupaten || "-"}</td>
         <td style="color:var(--muted);font-size:12px">${c.tgl}</td>
         <td><button class="action-btn" onclick="showDetail('${c.id || c.name}')">Detail</button></td>
       </tr>`;
@@ -756,14 +820,15 @@
 
   // CHART RENDER (dipanggil setelah data loaded)
   function renderCharts() {
-    // Hitung per posisi
-    const posisiCount = {};
-    candidates.forEach(c => { posisiCount[c.posisi] = (posisiCount[c.posisi] || 0) + 1; });
-    const topPosisi = Object.entries(posisiCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    // Hitung per departemen untuk bar chart
+    const deptCount = {};
+    candidates.forEach(c => { const d = c.dept||"Lainnya"; deptCount[d]=(deptCount[d]||0)+1; });
+    const topDept = Object.entries(deptCount).sort((a,b)=>b[1]-a[1]).slice(0,6);
 
-    // Hitung per status untuk bar chart
-    const statusLabels = ["screening","interview","test","offer","hired","rejected"];
-    const statusData   = statusLabels.map(s => candidates.filter(c=>c.status===s).length);
+    // Hitung per posisi untuk doughnut
+    const posisiCount = {};
+    candidates.forEach(c => { const p = c.posisi||"Lainnya"; posisiCount[p]=(posisiCount[p]||0)+1; });
+    const topPosisi = Object.entries(posisiCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
     if (chartBulanan) chartBulanan.destroy();
     if (chartPosisi)  chartPosisi.destroy();
@@ -771,17 +836,17 @@
     chartBulanan = new Chart(document.getElementById("chartBulanan"), {
       type: "bar",
       data: {
-        labels: statusLabels.map(s => s.charAt(0).toUpperCase()+s.slice(1)),
+        labels: topDept.map(d=>d[0]),
         datasets: [{
-          label:"Kandidat", data: statusData,
-          backgroundColor: ["#0EA5E9","#F59E0B","#F59E0B","#10B981","#4F46E5","#EF4444"],
+          label:"Kandidat", data: topDept.map(d=>d[1]),
+          backgroundColor: ["#4F46E5","#0EA5E9","#10B981","#F59E0B","#8B5CF6","#EF4444"],
           borderRadius: 6
         }]
       },
       options: {
         responsive:true,
         plugins:{ legend:{ display:false } },
-        scales:{ x:{ grid:{display:false} }, y:{ grid:{color:"#F1F5F9"}, ticks:{font:{size:11}} } }
+        scales:{ x:{ grid:{display:false}, ticks:{font:{size:10}} }, y:{ grid:{color:"#F1F5F9"}, ticks:{font:{size:11}} } }
       }
     });
 
@@ -803,7 +868,7 @@
   }
 
   // ── INISIALISASI ───────────────────────────────────────────
-  loadFromSheets();
+  // loadFromSheets() dipanggil setelah login berhasil
 
   // Tab interaktif
   document.querySelectorAll(".tab").forEach(t => {
@@ -828,7 +893,6 @@
 
     const initials = c.name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
     const st = statusMap[c.status] || { label: c.status, cls: "badge-screening" };
-    const sc = scoreColor(c.skor);
 
     document.getElementById("detail-view").innerHTML = `
       <button class="back-btn" onclick="hideDetail()">← Kembali ke Dashboard</button>
@@ -845,7 +909,7 @@
             <span class="badge ${st.cls}" style="margin-bottom:8px;font-size:13px;padding:5px 14px">${st.label}</span>
           </div>
           <div class="profile-name">${c.name}</div>
-          <div class="profile-sub">${c.email}</div>
+          <div class="profile-sub">${c.email || c.no_telp || "-"}</div>
           ${c.id ? `<span class="profile-id">${c.id}</span>` : ""}
 
           <div class="profile-grid">
@@ -858,19 +922,28 @@
               <span>${c.dept || "-"}</span>
             </div>
             <div class="profile-field">
-              <label>Sumber Lamaran</label>
-              <span>${c.sumber || "-"}</span>
+              <label>Pendidikan</label>
+              <span>${c.pendidikan || "-"}${c.jurusan ? " · " + c.jurusan : ""}</span>
             </div>
             <div class="profile-field">
-              <label>Tanggal Melamar</label>
-              <span>${c.tgl || "-"}</span>
+              <label>No. Telepon</label>
+              <span>${c.no_telp || "-"}</span>
             </div>
-            <div class="profile-field" style="grid-column:1/-1">
-              <label>Skor Kandidat</label>
-              <span style="color:${sc};font-size:20px;font-weight:800">${c.skor}</span>
-              <div class="profile-score-bar">
-                <div class="profile-score-fill" style="width:${c.skor}%;background:${sc}"></div>
-              </div>
+            <div class="profile-field">
+              <label>Kabupaten</label>
+              <span>${c.kabupaten || "-"}</span>
+            </div>
+            <div class="profile-field">
+              <label>Pengalaman</label>
+              <span>${c.pengalaman || "-"}</span>
+            </div>
+            <div class="profile-field">
+              <label>Gender</label>
+              <span>${c.gender || "-"}</span>
+            </div>
+            <div class="profile-field">
+              <label>Tanggal Daftar</label>
+              <span>${c.tgl || "-"}</span>
             </div>
           </div>
         </div>
