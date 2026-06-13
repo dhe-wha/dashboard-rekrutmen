@@ -1105,7 +1105,7 @@
 
   function renderKanban() {
     const q = phaseSearchQ.toLowerCase();
-    const filtered = q ? phases.filter(p => p.nama.toLowerCase().includes(q) || p.berkas.toLowerCase().includes(q)) : phases;
+    const filtered = q ? phases.filter(p => p.nama.toLowerCase().includes(q) || p.nomor.toLowerCase().includes(q)) : phases;
     const byPhase = {};
     PHASE_ORDER.forEach(ph => byPhase[ph] = []);
     filtered.forEach(p => { if (byPhase[p.phase]) byPhase[p.phase].push(p); });
@@ -1142,7 +1142,7 @@
                     <div style="width:28px;height:28px;border-radius:50%;background:${col};color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${ini}</div>
                     <div>
                       <div class="kanban-card-name">${c.nama}</div>
-                      <div class="kanban-card-id">${c.berkas}</div>
+                      <div class="kanban-card-id">${c.nomor}</div>
                     </div>
                   </div>
                   ${dateInfo ? `<div class="kanban-card-date">${dateInfo}</div>` : ""}
