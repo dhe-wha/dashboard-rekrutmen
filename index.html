@@ -1460,34 +1460,10 @@
   }
 
   let recapJobs = [];
-  let openJobsCount = 0;
   async function loadRecapJobs() {
     try {
-      const [resRecap, resJobs] = await Promise.all([
-        fetch(GVIZ("recap_jobs")),
-        fetch(GVIZ("jobs"))
-      ]);
-      recapJobs = parseCSV(await resRecap.text()).filter(r => r.jabatan);
-      const jobRows = parseCSV(await resJobs.text()).filter(r => r.jabatan);
-      openJobsCount = jobRows.filter(r => (r.cek_status || "").toLowerCase() === "open").length;
-      // Sync ke array jobs jika belum di-load
-      if (!jobs.length) {
-        jobs = jobRows.map(r => {
-          const tglRaw = r.tgl_diminta || "";
-          const { dateObj: tglDateObj, label: tglLabel } = parseTgl(tglRaw);
-          return {
-            open_id:r.open_id||"", pt:r.pt||"", nomor:r.nomor_permintaan||"",
-            dep:r.dep||"", departemen:r.departemen||"", bagian:r.bagian||"",
-            jabatan:r.jabatan||"", gender:r.gender||"", umur:r.umur||"",
-            kebutuhan:parseInt(r.kebutuhan)||0, tgl:tglLabel, tglDateObj,
-            alasan:r.alasan_permintaan||"", kualifikasi:r.kualifikasi||"-",
-            fulfillment:parseInt(r.fulfillment)||0, outstanding:parseInt(r.outstanding)||0,
-            status:r.cek_status||"Open",
-          };
-        });
-        const badgeEl = document.getElementById("badge-lowongan");
-        if (badgeEl) badgeEl.textContent = jobs.length;
-      }
+      const res = await fetch(GVIZ("recap_jobs"));
+      recapJobs = parseCSV(await res.text()).filter(r => r.jabatan);
     } catch(e) { recapJobs = []; }
     renderProgressDashboard();
   }
