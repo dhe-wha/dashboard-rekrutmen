@@ -789,7 +789,7 @@
       const badgeEl = document.getElementById("badge-kandidat");
       if (badgeEl) badgeEl.textContent = candidates.length;
       updateStats(); renderTable(displayCandidates); renderCharts();
-      renderProgressDashboard();
+      loadRecapJobs();
     } catch(e) {
       if (statusEl) { statusEl.textContent = "⚠ Gagal memuat data dari Google Sheets"; statusEl.style.background="#FEF2F2"; statusEl.style.borderColor="#FCA5A5"; statusEl.style.color="#B91C1C"; }
       console.error(e);
@@ -1262,7 +1262,7 @@
     const titles = { dashboard:"Dashboard Rekrutmen", kandidat:"Data Kandidat", lowongan:"Lowongan Kerja", interview:"Pipeline Interview", penempatan:"Penempatan" };
     document.getElementById("topbar-title").textContent = titles[page] || page;
 
-    if (page === "dashboard") renderProgressDashboard();
+    if (page === "dashboard") { if (!recapJobs.length) loadRecapJobs(); else renderProgressDashboard(); }
     if (page === "lowongan")  { if (!jobs.length) loadJobs(); else renderJobsPage(); }
     if (page === "interview") { if (!phases.length) loadPhases(); else renderInterviewPage(); }
     if (page === "penempatan") { if (!window._fulfillments) loadPenempatan(); else renderPenempatanPage(); }
@@ -1527,6 +1527,45 @@
           <div class="stat-footer"><span class="stat-period">jadi karyawan</span></div>
         </div>
       </div>
+
+      <!-- RECAP JOBS -->
+      ${recapJobs.length ? `
+      <div class="table-card" style="margin-bottom:24px">
+        <div class="table-header">
+          <div>
+            <div class="card-title">Rekap Kebutuhan Karyawan</div>
+            <div class="card-subtitle">Data dari sheet recap_jobs · ${recapJobs.length} posisi</div>
+          </div>
+          <button onclick="loadRecapJobs()" style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--dark);cursor:pointer;font-size:12px">🔄 Refresh</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Departemen</th><th>Bagian</th><th>Jabatan</th>
+            <th style="text-align:center">Kebutuhan</th>
+            <th style="text-align:center">Terpenuhi</th>
+            <th style="text-align:center;color:var(--danger)">Kekurangan</th>
+            <th>Kondisi Sebelum</th>
+            <th>Kondisi Saat Ini</th>
+          </tr></thead>
+          <tbody>
+            ${recapJobs.map(r => {
+              const butuh  = parseInt(r.kebutuhan)   || 0;
+              const terisi = parseInt(r.terpenuhi)   || 0;
+              const kurang = parseInt(r.kekurangan)  || (butuh - terisi);
+              return `<tr>
+                <td style="font-weight:600">${r.departemen || "-"}</td>
+                <td style="color:var(--muted)">${r.bagian || "-"}</td>
+                <td>${r.jabatan || "-"}</td>
+                <td style="text-align:center;font-weight:700">${butuh}</td>
+                <td style="text-align:center;color:var(--success);font-weight:600">${terisi}</td>
+                <td style="text-align:center;color:var(--danger);font-weight:700">${kurang}</td>
+                <td style="font-size:12px;color:var(--muted);max-width:200px">${r.kondisi_sebelum || "-"}</td>
+                <td style="font-size:12px;color:var(--muted);max-width:200px">${r.kondisi_saat_ini || "-"}</td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>` : ""}
 
       <!-- TABEL DEPARTEMEN -->
       <div class="table-card" style="margin-bottom:24px">
