@@ -1768,19 +1768,22 @@
       </tr>`).join("");
   }
 
-  function renderPenempatanPage() {
-    const data = window._fulfillments || [];
-    const container = document.getElementById("penempatan-container");
-    if (!data.length) {
-      container.innerHTML = `<div style="color:var(--muted);padding:20px 0">Belum ada data penempatan.</div>`;
-      return;
-    }
+  let _rekapPage = 1;
+  const REKAP_PAGE_SIZE = 10;
+  let _rekapRows = [], _rekapBulanCols = [], _rekapTotal = 0;
 
-    // ── Buat rekap per (pt, departemen, bagian, jabatan) x bulan ──
+  function buildRekapTable(data, filterDept, filterTahun, page) {
+    page = page || 1;
     const BULAN_ID = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    const filtered = data.filter(f => {
+      const dept = f.departemen||f.dep||"-";
+      const {dateObj} = parseTgl(f.tgl_gabung||"");
+      const tahun = dateObj ? String(dateObj.getFullYear()) : "";
+      return (!filterDept || dept === filterDept) && (!filterTahun || tahun === filterTahun);
+    });
     const rekapMap = {};
     const bulanSet = new Set();
-    data.forEach(f => {
+    filtered.forEach(f => {
       const key = [f.pt||"-", f.departemen||f.dep||"-", f.bagian||"-", f.jabatan||"-"].join("|||");
       if (!rekapMap[key]) rekapMap[key] = { pt:f.pt||"-", dep:f.departemen||f.dep||"-", bagian:f.bagian||"-", jabatan:f.jabatan||"-", bulan:{} };
       const {dateObj} = parseTgl(f.tgl_gabung||"");
@@ -1790,60 +1793,120 @@
         rekapMap[key].bulan[bKey] = (rekapMap[key].bulan[bKey]||0) + 1;
       }
     });
-    const bulanCols = [...bulanSet].sort().map(k => {
+    _rekapBulanCols = [...bulanSet].sort().map(k => {
       const [y, m] = k.split("-");
-      return { key: k, label: `${BULAN_ID[+m]} ${y}` };
+      return { key: k, label: `${BULAN_ID[+m]}` };
     });
-    const rekapRows = Object.values(rekapMap).sort((a,b) => a.pt.localeCompare(b.pt) || a.dep.localeCompare(b.dep));
+    _rekapRows = Object.values(rekapMap).sort((a,b) => a.pt.localeCompare(b.pt) || a.dep.localeCompare(b.dep));
+    _rekapTotal = filtered.length;
+    _rekapPage  = page;
+
+    if (!_rekapRows.length) return `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Tidak ada data untuk filter yang dipilih.</div>`;
+
+    return renderRekapTablePage(_rekapPage);
+  }
+
+  function renderRekapTablePage(page) {
+    const rows  = _rekapRows;
+    const cols  = _rekapBulanCols;
+    const total = _rekapTotal;
+    const start = (page-1)*REKAP_PAGE_SIZE;
+    const end   = Math.min(start+REKAP_PAGE_SIZE, rows.length);
+    const paged = rows.slice(start, end);
+    const totalPages = Math.ceil(rows.length/REKAP_PAGE_SIZE);
+
+    const rowsHtml = paged.map(r => {
+      const t = Object.values(r.bulan).reduce((s,v)=>s+v,0);
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:10px 14px;font-weight:600;color:var(--primary)">${r.pt}</td>
+        <td style="padding:10px 14px;font-weight:500">${r.dep}</td>
+        <td style="padding:10px 14px;color:var(--muted)">${r.bagian}</td>
+        <td style="padding:10px 14px">${r.jabatan}</td>
+        ${cols.map(b=>{ const n=r.bulan[b.key]||0; return `<td style="padding:10px 10px;text-align:center;font-weight:${n?700:400};color:${n?'var(--dark)':'#CBD5E1'}">${n||"-"}</td>`; }).join("")}
+        <td style="padding:10px 12px;text-align:center;font-weight:800;color:var(--primary);background:#EEF2FF">${t}</td>
+      </tr>`;
+    }).join("");
+
+    const totalRowHtml = `<tr style="background:var(--bg)">
+      <td colspan="4" style="padding:10px 14px;font-weight:800;color:var(--dark);font-size:12px">TOTAL (semua)</td>
+      ${cols.map(b=>{ const tot=rows.reduce((s,r)=>s+(r.bulan[b.key]||0),0); return `<td style="padding:10px 10px;text-align:center;font-weight:800;color:var(--dark)">${tot||"-"}</td>`; }).join("")}
+      <td style="padding:10px 12px;text-align:center;font-weight:800;color:var(--primary);background:#EEF2FF">${total}</td>
+    </tr>`;
+
+    // Pagination buttons
+    let pgHtml = `<button class="page-btn" onclick="goRekapPage(${page-1})" ${page===1?"disabled":""} style="${page===1?"opacity:.4;cursor:default":""}">‹</button>`;
+    const rs=Math.max(1,page-2), re=Math.min(totalPages,page+2);
+    if(rs>1) pgHtml+=`<button class="page-btn" onclick="goRekapPage(1)">1</button>${rs>2?'<span style="padding:0 4px;color:var(--muted)">…</span>':""}`;
+    for(let p=rs;p<=re;p++) pgHtml+=`<button class="page-btn ${p===page?"active":""}" onclick="goRekapPage(${p})">${p}</button>`;
+    if(re<totalPages) pgHtml+=`${re<totalPages-1?'<span style="padding:0 4px;color:var(--muted)">…</span>':""}<button class="page-btn" onclick="goRekapPage(${totalPages})">${totalPages}</button>`;
+    pgHtml+=`<button class="page-btn" onclick="goRekapPage(${page+1})" ${page===totalPages?"disabled":""} style="${page===totalPages?"opacity:.4;cursor:default":""}">›</button>`;
+
+    return `
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">${rows.length} jabatan · ${total} karyawan ditempatkan</p>
+      <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border)">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:var(--bg)">
+            <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap">PT</th>
+            <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap">Departemen</th>
+            <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap">Bagian</th>
+            <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap">Jabatan</th>
+            ${cols.map(b=>`<th style="padding:10px 10px;text-align:center;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap;min-width:64px">${b.label}</th>`).join("")}
+            <th style="padding:10px 12px;text-align:center;font-weight:700;color:var(--dark);text-transform:uppercase;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap;background:#EEF2FF">Total</th>
+          </tr></thead>
+          <tbody>${rowsHtml}${totalRowHtml}</tbody>
+        </table>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 4px 0">
+        <p style="font-size:13px;color:var(--muted)">Menampilkan ${start+1}–${end} dari ${rows.length} jabatan</p>
+        <div class="page-btns">${pgHtml}</div>
+      </div>`;
+  }
+
+  function goRekapPage(p) {
+    const total = Math.ceil(_rekapRows.length/REKAP_PAGE_SIZE);
+    if(p<1||p>total) return;
+    _rekapPage = p;
+    const wrap = document.getElementById("rekap-table-wrap");
+    if(wrap) wrap.innerHTML = renderRekapTablePage(p);
+  }
+
+  function filterRekap() {
+    const dept  = (document.getElementById("rekap-filter-dept")||{}).value  || "";
+    const tahun = (document.getElementById("rekap-filter-tahun")||{}).value || "";
+    const wrap  = document.getElementById("rekap-table-wrap");
+    if (wrap) wrap.innerHTML = buildRekapTable(window._fulfillments||[], dept, tahun, 1);
+  }
+  function renderPenempatanPage() {
+    const data = window._fulfillments || [];
+    const container = document.getElementById("penempatan-container");
+    if (!data.length) {
+      container.innerHTML = `<div style="color:var(--muted);padding:20px 0">Belum ada data penempatan.</div>`;
+      return;
+    }
+    // Opsi filter
+    const deptList = [...new Set(data.map(f => f.departemen||f.dep||"-").filter(Boolean))].sort();
+    const tahunList = [...new Set(data.map(f => { const {dateObj}=parseTgl(f.tgl_gabung||""); return dateObj?String(dateObj.getFullYear()):""; }).filter(Boolean))].sort().reverse();
+    const selStyle = `padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;color:var(--dark);background:var(--bg);cursor:pointer`;
 
     container.innerHTML = `
       <!-- REKAP PENEMPATAN PER BULAN -->
       <div style="margin-bottom:24px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div>
-            <h2 style="font-size:18px;font-weight:700;color:var(--dark)">Rekap Penempatan per Bulan</h2>
-            <p style="font-size:13px;color:var(--muted);margin-top:2px">${rekapRows.length} jabatan · ${data.length} karyawan ditempatkan</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <h2 style="font-size:18px;font-weight:700;color:var(--dark)">Rekap Penempatan per Bulan</h2>
+          <div style="display:flex;gap:10px;align-items:center">
+            <select id="rekap-filter-dept" onchange="filterRekap()" style="${selStyle}">
+              <option value="">Semua Departemen</option>
+              ${deptList.map(d=>`<option value="${d}">${d}</option>`).join("")}
+            </select>
+            <select id="rekap-filter-tahun" onchange="filterRekap()" style="${selStyle}">
+              <option value="">Semua Tahun</option>
+              ${tahunList.map(t=>`<option value="${t}">${t}</option>`).join("")}
+            </select>
+            <button onclick="loadPenempatan()" style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--dark);cursor:pointer;font-size:13px">🔄 Refresh</button>
           </div>
-          <button onclick="loadPenempatan()" style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--dark);cursor:pointer;font-size:13px">🔄 Refresh</button>
         </div>
-        <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border)">
-          <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <thead>
-              <tr style="background:var(--bg)">
-                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap">PT</th>
-                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap">Departemen</th>
-                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap">Bagian</th>
-                <th style="padding:10px 14px;text-align:left;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap">Jabatan</th>
-                ${bulanCols.map(b=>`<th style="padding:10px 12px;text-align:center;font-weight:700;color:var(--muted);text-transform:uppercase;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap;min-width:70px">${b.label}</th>`).join("")}
-                <th style="padding:10px 12px;text-align:center;font-weight:700;color:var(--dark);text-transform:uppercase;font-size:11px;border-bottom:1px solid var(--border);white-space:nowrap;background:#EEF2FF">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rekapRows.map(r => {
-                const total = Object.values(r.bulan).reduce((s,v)=>s+v,0);
-                return `<tr style="border-bottom:1px solid var(--border)">
-                  <td style="padding:10px 14px;font-weight:600;color:var(--primary)">${r.pt}</td>
-                  <td style="padding:10px 14px;font-weight:500">${r.dep}</td>
-                  <td style="padding:10px 14px;color:var(--muted)">${r.bagian}</td>
-                  <td style="padding:10px 14px">${r.jabatan}</td>
-                  ${bulanCols.map(b=>{
-                    const n = r.bulan[b.key]||0;
-                    return `<td style="padding:10px 12px;text-align:center;font-weight:${n?'700':'400'};color:${n?'var(--dark)':'var(--border)'}">${n||"-"}</td>`;
-                  }).join("")}
-                  <td style="padding:10px 12px;text-align:center;font-weight:800;color:var(--primary);background:#EEF2FF">${total}</td>
-                </tr>`;
-              }).join("")}
-              <!-- TOTAL ROW -->
-              <tr style="background:var(--bg);font-weight:800">
-                <td colspan="4" style="padding:10px 14px;font-weight:800;color:var(--dark)">TOTAL</td>
-                ${bulanCols.map(b=>{
-                  const tot = rekapRows.reduce((s,r)=>s+(r.bulan[b.key]||0),0);
-                  return `<td style="padding:10px 12px;text-align:center;font-weight:800;color:var(--dark)">${tot||"-"}</td>`;
-                }).join("")}
-                <td style="padding:10px 12px;text-align:center;font-weight:800;color:var(--primary);background:#EEF2FF">${data.length}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div id="rekap-table-wrap">
+          ${buildRekapTable(data, "", "")}
         </div>
       </div>
 
