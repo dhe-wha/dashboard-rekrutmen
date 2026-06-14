@@ -649,7 +649,7 @@
   // ── KONFIGURASI GOOGLE SHEETS ──────────────────────────────
   const SHEET_ID = "1Tj2ZNCW04lOGoB5hcCxT_d3GvqdAj854daY4dVDN3sU";
   const GVIZ = (sheet) =>
-    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}`;
+    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet)}&t=${Math.floor(Date.now()/300000)}`;
 
   // ── CSV PARSER ─────────────────────────────────────────────
   function parseCSVRow(row) {
