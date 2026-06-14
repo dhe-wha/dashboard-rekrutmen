@@ -271,8 +271,6 @@
     .detail-view {
       display: none; padding: 28px 32px;
     }
-    .detail-view.active { display: block; }
-    .content.hidden { display: none; }
     .back-btn {
       display: inline-flex; align-items: center; gap: 8px;
       padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
@@ -1595,15 +1593,13 @@
         </div>
       </div>`;
 
-    document.querySelectorAll(".content").forEach(el => el.classList.add("hidden"));
-    document.getElementById("detail-view").classList.add("active");
+    document.querySelectorAll(".content").forEach(el => el.style.display = "none");
+    document.getElementById("detail-view").style.display = "block";
     window.scrollTo({ top: 0, behavior: "instant" });
   }
 
   function hideDetail() {
-    document.getElementById("detail-view").classList.remove("active");
-    document.querySelectorAll(".content").forEach(el => el.classList.remove("hidden"));
-    // kembalikan tampilan page yang sedang aktif
+    document.getElementById("detail-view").style.display = "none";
     const activeNav = document.querySelector(".nav-item.active[data-page]");
     const activePage = activeNav ? activeNav.dataset.page : "kandidat";
     ["dashboard","kandidat","lowongan","interview"].forEach(p => {
