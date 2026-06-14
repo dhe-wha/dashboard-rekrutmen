@@ -1640,20 +1640,30 @@
       const res = await fetch(GVIZ("fulfillment"));
       const text = await res.text();
       const rows = parseCSV(text);
-      window._fulfillments = rows.map(r => ({
-        fulfill_id      : r.fulfill_id       || r._col0 || "",
-        nomor_berkas    : r.nomor_berkas      || r._col1 || "",
-        pt              : r.pt               || r._col2 || "",
-        nomor_permintaan: r.nomor_permintaan  || r._col3 || "",
-        nik             : r.nik_id           || r._col4 || "",
-        nama            : r.nama             || r._col5 || "",
-        dep             : r.dep              || r._col6 || "",
-        departemen      : r.departemen        || r._col7 || "",
-        bagian          : r.bagian            || r._col8 || "",
-        jabatan         : r.jabatan           || r._col9 || "",
-        tgl_gabung      : r["tgl-gabung"]     || r.tgl_gabung || r._col10 || "",
-        alasan          : r.alasan            || r._col11 || "",
-      }));
+      window._fulfillments = rows.map(r => {
+        const tglRaw = r["tgl-gabung"] || r.tgl_gabung || r._col10 || "";
+        const { dateObj: tglDateObj } = parseTgl(tglRaw);
+        return {
+          fulfill_id      : r.fulfill_id       || r._col0 || "",
+          nomor_berkas    : r.nomor_berkas      || r._col1 || "",
+          pt              : r.pt               || r._col2 || "",
+          nomor_permintaan: r.nomor_permintaan  || r._col3 || "",
+          nik             : r.nik_id           || r._col4 || "",
+          nama            : r.nama             || r._col5 || "",
+          dep             : r.dep              || r._col6 || "",
+          departemen      : r.departemen        || r._col7 || "",
+          bagian          : r.bagian            || r._col8 || "",
+          jabatan         : r.jabatan           || r._col9 || "",
+          tgl_gabung      : tglRaw,
+          tglDateObj,
+          alasan          : r.alasan            || r._col11 || "",
+        };
+      }).sort((a, b) => {
+        if (a.tglDateObj && b.tglDateObj) return b.tglDateObj - a.tglDateObj;
+        if (a.tglDateObj) return -1;
+        if (b.tglDateObj) return 1;
+        return 0;
+      });
       const badge = document.getElementById("badge-penempatan");
       if (badge) badge.textContent = window._fulfillments.length || "0";
       renderPenempatanPage();
