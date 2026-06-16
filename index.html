@@ -786,6 +786,7 @@
           foto:             r.foto || "",
           status_kandidat:  r.status_kandidat || "",
           progress:         r.progress || "",
+          status_progress:  r.status_progress || "",
           tgl:         tglRaw || "-", dateObj,
           color:       AVATAR_COLORS[i % AVATAR_COLORS.length],
         };
@@ -1687,7 +1688,7 @@
     const statusMap2 = { open:"Proses", close:"Selesai", interview:"Interview", offer:"Offering" };
     const rows = matched.map(c => `
       <tr>
-        <td style="font-weight:600">${c.id || "-"}</td>
+        <td style="font-size:12px;color:var(--muted)">${c.status_progress || "-"}</td>
         <td>${c.name || "-"}</td>
         <td>${c.posisi || "-"}</td>
         <td><span class="badge badge-screening" style="font-size:11px">${c.status || "-"}</span></td>
@@ -1711,7 +1712,7 @@
           ${matched.length === 0 ? '<div style="color:var(--muted);text-align:center;padding:40px">Tidak ada kandidat</div>' : `
           <table style="width:100%">
             <thead><tr>
-              <th>No. Berkas</th><th>Nama</th><th>Posisi Dilamar</th><th>Status</th><th>No. Telp</th>
+              <th>Status Progress</th><th>Nama</th><th>Posisi Dilamar</th><th>Status</th><th>No. Telp</th>
             </tr></thead>
             <tbody>${rows}</tbody>
           </table>`}
