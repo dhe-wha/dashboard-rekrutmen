@@ -447,7 +447,7 @@
 <div class="main">
   <header class="topbar">
     <div class="topbar-left">
-      <h1 id="topbar-title">Dashboard Rekrutmen</h1>
+      <h1 id="topbar-title">Progres Pemenuhan Karyawan</h1>
       <p>Juni 2026 · Update terakhir: hari ini</p>
     </div>
     <div class="topbar-right">
@@ -1272,7 +1272,7 @@
       if (el) el.style.display = p === page ? "block" : "none";
     });
 
-    const titles = { dashboard:"Dashboard Rekrutmen", kandidat:"Data Kandidat", lowongan:"Lowongan Kerja", interview:"Pipeline Interview", penempatan:"Penempatan", analitik:"Analitik Rekrutmen" };
+    const titles = { dashboard:"Progres Pemenuhan Karyawan", kandidat:"Data Kandidat", lowongan:"Lowongan Kerja", interview:"Pipeline Interview", penempatan:"Penempatan", analitik:"Analitik Rekrutmen" };
     document.getElementById("topbar-title").textContent = titles[page] || page;
 
     if (page === "dashboard") { if (!recapJobs.length) loadRecapJobs(); else renderProgressDashboard(); }
