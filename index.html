@@ -1713,7 +1713,7 @@
             const matchCount = recapId ? candidates.filter(c => (c.progress || "").trim() === recapId).length : 0;
             const btnHtml = matchCount > 0
               ? `<button onclick="showRecapCandidates('${recapId}','${(r.jabatan||'').replace(/'/g,"\\'")}','${(r.departemen||'').replace(/'/g,"\\'")}')
-                  " style="padding:4px 10px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600">
+                  " style="padding:4px 10px;background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7;border-radius:6px;font-size:12px;cursor:pointer;font-weight:600">
                   👤 ${matchCount} Kandidat
                 </button>`
               : `<span style="color:var(--muted);font-size:12px">-</span>`;
