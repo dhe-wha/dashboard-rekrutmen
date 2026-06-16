@@ -1527,22 +1527,22 @@
       <div style="background:url('bg-pellet.png') center bottom/cover no-repeat;border-radius:16px;padding:24px;margin-bottom:24px">
         <div class="stats-grid" style="margin-bottom:0">
           <div class="stat-card" style="background:rgba(255,255,255,0.75);backdrop-filter:blur(6px)">
-            <div class="stat-header"><span class="stat-label">Open Posisi</span><div class="stat-icon blue">📋</div></div>
+            <div class="stat-header"><span class="stat-label">Open Posisi</span><img src="open.png" style="width:56px;height:56px;object-fit:contain"></div>
             <div class="stat-value">${openPosisi}</div>
             <div class="stat-footer"><span class="stat-period">jabatan dibutuhkan</span></div>
           </div>
           <div class="stat-card" style="background:rgba(255,255,255,0.75);backdrop-filter:blur(6px)">
-            <div class="stat-header"><span class="stat-label">Kebutuhan</span><div class="stat-icon yellow">🎯</div></div>
+            <div class="stat-header"><span class="stat-label">Kebutuhan</span><img src="kandidat.png" style="width:56px;height:56px;object-fit:contain"></div>
             <div class="stat-value">${totalKebutuhan}</div>
             <div class="stat-footer"><span class="stat-period">total kebutuhan karyawan</span></div>
           </div>
           <div class="stat-card" style="background:rgba(255,255,255,0.75);backdrop-filter:blur(6px)">
-            <div class="stat-header"><span class="stat-label">Terpenuhi</span><div class="stat-icon green">✅</div></div>
+            <div class="stat-header"><span class="stat-label">Terpenuhi</span><img src="terpenuhi.png" style="width:56px;height:56px;object-fit:contain"></div>
             <div class="stat-value">${totalTerpenuhi}</div>
             <div class="stat-footer"><span class="stat-period">${totalKebutuhan ? Math.round(totalTerpenuhi/totalKebutuhan*100) : 0}% dari kebutuhan</span></div>
           </div>
           <div class="stat-card" style="background:rgba(255,255,255,0.75);backdrop-filter:blur(6px)">
-            <div class="stat-header"><span class="stat-label">Kekurangan</span><div class="stat-icon red">⚠️</div></div>
+            <div class="stat-header"><span class="stat-label">Kekurangan</span><img src="kekurangan.png" style="width:56px;height:56px;object-fit:contain"></div>
             <div class="stat-value" style="color:var(--danger)">${totalKekurangan}</div>
             <div class="stat-footer"><span class="stat-period">masih dibutuhkan</span></div>
           </div>
