@@ -1526,25 +1526,29 @@
       <!-- SUMMARY CARDS -->
       <div style="background:url('bg-pellet.png') center bottom/cover no-repeat;border-radius:16px;padding:24px;margin-bottom:24px">
         <div class="stats-grid" style="margin-bottom:0">
-          <div class="stat-card" style="background:rgba(255,255,255,0.75);backdrop-filter:blur(6px)">
-            <div class="stat-header"><span class="stat-label">Open Posisi</span><img src="open.png" style="width:56px;height:56px;object-fit:contain"></div>
-            <div class="stat-value">${openPosisi}</div>
-            <div class="stat-footer"><span class="stat-period">jabatan dibutuhkan</span></div>
+          <div class="stat-card" style="background:rgba(255,255,255,0.82);backdrop-filter:blur(8px);text-align:center;padding:20px 16px">
+            <img src="open.png" style="width:90px;height:90px;object-fit:contain;margin:0 auto 10px;display:block;mix-blend-mode:multiply;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.12))">
+            <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Open Posisi</div>
+            <div style="font-size:40px;font-weight:800;color:var(--dark);line-height:1">${openPosisi}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px">jabatan dibutuhkan</div>
           </div>
-          <div class="stat-card" style="background:rgba(255,255,255,0.75);backdrop-filter:blur(6px)">
-            <div class="stat-header"><span class="stat-label">Kebutuhan</span><img src="kandidat.png" style="width:56px;height:56px;object-fit:contain"></div>
-            <div class="stat-value">${totalKebutuhan}</div>
-            <div class="stat-footer"><span class="stat-period">total kebutuhan karyawan</span></div>
+          <div class="stat-card" style="background:rgba(255,255,255,0.82);backdrop-filter:blur(8px);text-align:center;padding:20px 16px">
+            <img src="kandidat.png" style="width:90px;height:90px;object-fit:contain;margin:0 auto 10px;display:block;mix-blend-mode:multiply;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.12))">
+            <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Kebutuhan</div>
+            <div style="font-size:40px;font-weight:800;color:var(--dark);line-height:1">${totalKebutuhan}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px">total kebutuhan karyawan</div>
           </div>
-          <div class="stat-card" style="background:rgba(255,255,255,0.75);backdrop-filter:blur(6px)">
-            <div class="stat-header"><span class="stat-label">Terpenuhi</span><img src="terpenuhi.png" style="width:56px;height:56px;object-fit:contain"></div>
-            <div class="stat-value">${totalTerpenuhi}</div>
-            <div class="stat-footer"><span class="stat-period">${totalKebutuhan ? Math.round(totalTerpenuhi/totalKebutuhan*100) : 0}% dari kebutuhan</span></div>
+          <div class="stat-card" style="background:rgba(255,255,255,0.82);backdrop-filter:blur(8px);text-align:center;padding:20px 16px">
+            <img src="terpenuhi.png" style="width:90px;height:90px;object-fit:contain;margin:0 auto 10px;display:block;mix-blend-mode:multiply;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.12))">
+            <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Terpenuhi</div>
+            <div style="font-size:40px;font-weight:800;color:var(--success);line-height:1">${totalTerpenuhi}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px">${totalKebutuhan ? Math.round(totalTerpenuhi/totalKebutuhan*100) : 0}% dari kebutuhan</div>
           </div>
-          <div class="stat-card" style="background:rgba(255,255,255,0.75);backdrop-filter:blur(6px)">
-            <div class="stat-header"><span class="stat-label">Kekurangan</span><img src="kekurangan.png" style="width:56px;height:56px;object-fit:contain"></div>
-            <div class="stat-value" style="color:var(--danger)">${totalKekurangan}</div>
-            <div class="stat-footer"><span class="stat-period">masih dibutuhkan</span></div>
+          <div class="stat-card" style="background:rgba(255,255,255,0.82);backdrop-filter:blur(8px);text-align:center;padding:20px 16px">
+            <img src="kekurangan.png" style="width:90px;height:90px;object-fit:contain;margin:0 auto 10px;display:block;mix-blend-mode:multiply;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.12))">
+            <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Kekurangan</div>
+            <div style="font-size:40px;font-weight:800;color:var(--danger);line-height:1">${totalKekurangan}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:6px">masih dibutuhkan</div>
           </div>
         </div>
       </div>
